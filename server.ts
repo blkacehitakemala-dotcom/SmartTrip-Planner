@@ -3,6 +3,11 @@ import express from 'express';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { generateTripWithGemini } from './server/geminiTrip.ts';
+import {
+  forwardToN8nWebhook,
+  validateWebhookUrlStructure,
+  type N8nTripContext,
+} from './server/n8nWebhook.ts';
 import type { InterestKey, Language, TravelStyle } from './src/types/trip.ts';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -104,6 +109,114 @@ async function startServer() {
       }
 
       res.status(status).json({ error: message });
+    }
+  });
+
+  app.get('/api/n8n-chat/config', (_req, res) => {
+    const serverWebhookUrl = (process.env.N8N_WEBHOOK_URL || '').trim();
+    const isConfigured =
+      serverWebhookUrl.length > 0 && validateWebhookUrlStructure(serverWebhookUrl).valid;
+    res.json({ serverConfigured: isConfigured });
+  });
+
+  app.post('/api/n8n-chat', async (req, res) => {
+    try {
+      const body = req.body ?? {};
+      const lang: Language = body.language === 'en' ? 'en' : 'id';
+      const currency = body.currency === 'USD' ? 'USD' : 'IDR';
+      const message = typeof body.message === 'string' ? body.message.trim() : '';
+      const sessionId =
+        typeof body.sessionId === 'string' && /^[a-zA-Z0-9_-]{6,80}$/.test(body.sessionId)
+          ? body.sessionId
+          : `session-${Date.now()}`;
+
+      if (message.length < 1 || message.length > 2000) {
+        res.status(400).json({
+          error:
+            lang === 'id'
+              ? 'Pesan harus antara 1 hingga 2000 karakter.'
+              : 'Message must be between 1 and 2000 characters.',
+        });
+        return;
+      }
+
+      const envWebhookUrl = (process.env.N8N_WEBHOOK_URL || '').trim();
+      const envAuthToken = (process.env.N8N_WEBHOOK_AUTH_TOKEN || '').trim();
+      const hasServerWebhook =
+        envWebhookUrl.length > 0 && validateWebhookUrlStructure(envWebhookUrl).valid;
+
+      const clientWebhookUrl = typeof body.webhookUrl === 'string' ? body.webhookUrl.trim() : '';
+      const targetUrl = hasServerWebhook ? envWebhookUrl : clientWebhookUrl;
+
+      if (!targetUrl) {
+        res.status(400).json({
+          error:
+            lang === 'id'
+              ? 'URL Webhook n8n belum diatur. Buka pengaturan di pojok atas chatbox untuk memasukkan URL webhook HTTPS Anda.'
+              : 'n8n Webhook URL is not configured yet. Open chatbox settings to enter your HTTPS webhook URL.',
+        });
+        return;
+      }
+
+      const urlCheck = validateWebhookUrlStructure(targetUrl);
+      if (!urlCheck.valid) {
+        res.status(400).json({
+          error:
+            lang === 'id'
+              ? `URL Webhook tidak valid: ${urlCheck.reason}`
+              : `Invalid Webhook URL: ${urlCheck.reason}`,
+        });
+        return;
+      }
+
+      let tripContext: N8nTripContext | null = null;
+      if (body.tripContext && typeof body.tripContext === 'object') {
+        const ctx = body.tripContext as Record<string, unknown>;
+        if (typeof ctx.destination === 'string' && ctx.destination.trim()) {
+          tripContext = {
+            destination: ctx.destination.trim().slice(0, 120),
+            days: Math.max(1, Math.min(14, Number(ctx.days) || 1)),
+            travelers: Math.max(1, Math.min(50, Number(ctx.travelers) || 1)),
+            style: typeof ctx.style === 'string' ? ctx.style.slice(0, 40) : 'standard',
+            totalEstimateIdr: Math.max(0, Math.round(Number(ctx.totalEstimateIdr) || 0)),
+            summary: typeof ctx.summary === 'string' ? ctx.summary.slice(0, 500) : '',
+          };
+        }
+      }
+
+      const reply = await forwardToN8nWebhook({
+        targetUrl,
+        authToken: hasServerWebhook ? envAuthToken : undefined,
+        message,
+        sessionId,
+        language: lang,
+        currency,
+        tripContext,
+      });
+
+      res.json({ reply });
+    } catch (error) {
+      console.error('[api/n8n-chat] Error:', error);
+      const lang: Language = req.body?.language === 'en' ? 'en' : 'id';
+      const detail = error instanceof Error ? error.message : '';
+      const isTimeout = detail.toLowerCase().includes('timeout') || detail.toLowerCase().includes('abort');
+      const isValidation =
+        detail.includes('public network') ||
+        detail.includes('HTTPS') ||
+        detail.includes('redirect') ||
+        detail.includes('Private');
+
+      const message = isTimeout
+        ? lang === 'id'
+          ? 'Permintaan ke webhook n8n melewati batas waktu (25 detik). Periksa workflow n8n Anda.'
+          : 'Request to the n8n webhook timed out (25s). Please check your n8n workflow.'
+        : isValidation
+          ? detail
+          : lang === 'id'
+            ? 'Gagal menghubungi webhook n8n. Pastikan URL webhook aktif dan mengembalikan respons JSON/teks.'
+            : 'Failed to reach the n8n webhook. Verify the webhook URL is active and returns a JSON or text response.';
+
+      res.status(isValidation ? 400 : 502).json({ error: message });
     }
   });
 

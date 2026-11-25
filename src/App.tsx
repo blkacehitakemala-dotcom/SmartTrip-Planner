@@ -37,6 +37,7 @@ import { BudgetTab } from './components/BudgetTab';
 import { ChecklistTab } from './components/ChecklistTab';
 import { SavedPlansDrawer } from './components/SavedPlansDrawer';
 import { Footer } from './components/Footer';
+import { N8nChatWidget } from './components/N8nChatWidget';
 
 const DEFAULT_FORM: TripFormInput = {
   destination: '',
@@ -59,6 +60,7 @@ export default function App() {
 
   const [savedTrips, setSavedTrips] = useState<SavedTrip[]>([]);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+  const [isChatOpen, setIsChatOpen] = useState(false);
   const [isCurrentSaved, setIsCurrentSaved] = useState(false);
   const [copiedWhatsApp, setCopiedWhatsApp] = useState(false);
 
@@ -473,7 +475,7 @@ export default function App() {
         </div>
       </main>
 
-      <Footer t={t} />
+      <Footer t={t} onOpenChat={() => setIsChatOpen(true)} />
 
       <SavedPlansDrawer
         isOpen={isDrawerOpen}
@@ -484,6 +486,15 @@ export default function App() {
         onClose={() => setIsDrawerOpen(false)}
         onLoadTrip={handleLoadSavedTrip}
         onDeleteTrip={handleDeleteSavedTrip}
+      />
+
+      <N8nChatWidget
+        isOpen={isChatOpen}
+        language={language}
+        currency={currency}
+        tripPlan={tripPlan}
+        t={t}
+        onToggleOpen={setIsChatOpen}
       />
     </div>
   );

@@ -1,38 +1,31 @@
-import { Bookmark } from 'lucide-react';
-import type { Currency, Language } from '../types/trip';
-import type { Translations } from '../i18n/translations';
+import { Bookmark, Moon, Sun } from 'lucide-react';
+import type { ThemeMode } from '../types/storyboard';
 
 interface HeaderProps {
-  language: Language;
-  currency: Currency;
   savedCount: number;
-  t: Translations;
-  onLanguageChange: (lang: Language) => void;
-  onCurrencyChange: (curr: Currency) => void;
+  theme: ThemeMode;
+  onThemeChange: (next: ThemeMode) => void;
   onOpenSaved: () => void;
 }
 
 export function Header({
-  language,
-  currency,
   savedCount,
-  t,
-  onLanguageChange,
-  onCurrencyChange,
+  theme,
+  onThemeChange,
   onOpenSaved,
 }: HeaderProps) {
   return (
-    <header className="no-print sticky top-0 z-30 h-16 bg-white/95 backdrop-blur-sm border-b border-slate-200/80">
-      <div className="mx-auto flex h-full max-w-6xl items-center justify-between gap-2 sm:gap-3 px-3 sm:px-6 lg:px-8">
+    <header className="no-print sticky top-0 z-30 h-16 border-b border-slate-200/80 bg-white/95 backdrop-blur-sm dark:border-slate-800 dark:bg-slate-900/95">
+      <div className="mx-auto flex h-full max-w-[1440px] items-center justify-between gap-2 sm:gap-4 px-3 sm:px-6 lg:px-8">
         {/* Brand */}
         <a
           href="#top"
-          className="flex items-center gap-2 text-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0284C7] rounded-md min-w-0 shrink"
+          className="flex items-center gap-2.5 text-slate-900 dark:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#6D28D9] rounded-md min-w-0 shrink"
         >
-          <span className="flex h-7 w-7 sm:h-8 sm:w-8 items-center justify-center rounded-lg bg-[#0284C7] text-white shrink-0">
+          <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#6D28D9] text-white shrink-0">
             <svg
-              width="16"
-              height="16"
+              width="17"
+              height="17"
               viewBox="0 0 24 24"
               fill="none"
               stroke="currentColor"
@@ -41,78 +34,64 @@ export function Header({
               strokeLinejoin="round"
               aria-hidden="true"
             >
-              <circle cx="12" cy="12" r="9" />
-              <polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76" />
+              <rect x="2" y="4" width="20" height="16" rx="2" />
+              <path d="M2 9h20" />
+              <path d="m7 4 3 5" />
+              <path d="m14 4 3 5" />
             </svg>
           </span>
-          <span className="font-display text-sm sm:text-lg font-bold tracking-tight whitespace-nowrap truncate">
-            {t.appName}
+          <span className="font-display text-base sm:text-lg font-bold tracking-tight whitespace-nowrap truncate">
+            StoryCraft AI
           </span>
         </a>
 
-        {/* Controls: Saved Plans + Language & Currency Switchers */}
-        <div className="flex items-center gap-1.5 sm:gap-3 shrink-0">
+        {/* Controls: Saved Projects + Light/Dark Switcher */}
+        <div className="flex items-center gap-2 sm:gap-3 shrink-0">
           <button
             type="button"
             onClick={onOpenSaved}
-            aria-label={`${t.savedPlansBtn} (${savedCount})`}
-            className="inline-flex min-h-[38px] sm:min-h-[40px] items-center gap-1 sm:gap-1.5 rounded-lg border border-slate-200 bg-white px-2 sm:px-3.5 py-1.5 sm:py-2 text-xs sm:text-sm font-medium text-slate-700 transition-colors duration-150 hover:border-slate-300 hover:bg-slate-50 hover:text-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0284C7] whitespace-nowrap shrink-0 cursor-pointer"
+            aria-label={`Proyek Tersimpan (${savedCount})`}
+            className="inline-flex min-h-[40px] items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-2.5 sm:px-3.5 py-2 text-xs sm:text-sm font-medium text-slate-700 transition-colors duration-150 hover:border-violet-300 hover:bg-violet-50/50 hover:text-slate-900 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:hover:border-violet-500/60 dark:hover:bg-slate-700/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#6D28D9] whitespace-nowrap shrink-0 cursor-pointer"
           >
-            <Bookmark className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-[#0284C7] shrink-0" aria-hidden="true" />
-            <span className="hidden md:inline">{t.savedPlansBtn}</span>
-            <span className="font-mono text-[11px] sm:text-xs tabular-nums text-slate-500">({savedCount})</span>
+            <Bookmark className="h-4 w-4 text-[#6D28D9] dark:text-violet-400 shrink-0" aria-hidden="true" />
+            <span className="hidden sm:inline">Proyek Tersimpan</span>
+            <span className="font-mono text-xs tabular-nums text-slate-500 dark:text-slate-400">
+              ({savedCount})
+            </span>
           </button>
 
-          {/* Language Switcher [ID | EN] */}
+          {/* [Light | Dark] Toggle */}
           <div
             role="group"
-            aria-label="Language"
-            className="inline-flex items-center rounded-lg bg-slate-100 p-0.5 shrink-0"
+            aria-label="Mode tampilan"
+            className="inline-flex items-center rounded-xl bg-slate-100 p-1 dark:bg-slate-800 shrink-0"
           >
-            {(['id', 'en'] as const).map((code) => {
-              const active = language === code;
-              return (
-                <button
-                  key={code}
-                  type="button"
-                  onClick={() => onLanguageChange(code)}
-                  aria-pressed={active}
-                  className={`min-h-[34px] min-w-[28px] sm:min-w-[34px] rounded-md px-1.5 sm:px-2 py-1 text-[11px] sm:text-xs font-semibold uppercase tracking-wide transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0284C7] whitespace-nowrap shrink-0 cursor-pointer ${
-                    active
-                      ? 'bg-white text-[#0284C7] shadow-xs'
-                      : 'text-slate-600 hover:text-slate-900'
-                  }`}
-                >
-                  {code.toUpperCase()}
-                </button>
-              );
-            })}
-          </div>
-
-          {/* Currency Switcher [IDR | USD] */}
-          <div
-            role="group"
-            aria-label="Currency"
-            className="inline-flex items-center rounded-lg bg-slate-100 p-0.5 shrink-0"
-          >
-            {(['IDR', 'USD'] as const).map((code) => {
-              const active = currency === code;
-              return (
-                <button
-                  key={code}
-                  type="button"
-                  onClick={() => onCurrencyChange(code)}
-                  aria-pressed={active}
-                  className={`min-h-[34px] min-w-[32px] sm:min-w-[38px] rounded-md px-1.5 sm:px-2 py-1 text-[11px] sm:text-xs font-semibold tracking-wide transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0284C7] whitespace-nowrap shrink-0 cursor-pointer ${
-                    active
-                      ? 'bg-white text-[#0D9488] shadow-xs'
-                      : 'text-slate-600 hover:text-slate-900'
-                  }`}
-                >
-                  {code}
-                </button>
-              );
-            })}
+            <button
+              type="button"
+              onClick={() => onThemeChange('light')}
+              aria-pressed={theme === 'light'}
+              className={`inline-flex min-h-[32px] items-center gap-1.5 rounded-lg px-2.5 py-1 text-xs font-semibold transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#6D28D9] whitespace-nowrap shrink-0 cursor-pointer ${
+                theme === 'light'
+                  ? 'bg-white text-[#6D28D9] shadow-xs'
+                  : 'text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-100'
+              }`}
+            >
+              <Sun className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+              <span>Light</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => onThemeChange('dark')}
+              aria-pressed={theme === 'dark'}
+              className={`inline-flex min-h-[32px] items-center gap-1.5 rounded-lg px-2.5 py-1 text-xs font-semibold transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#6D28D9] whitespace-nowrap shrink-0 cursor-pointer ${
+                theme === 'dark'
+                  ? 'bg-slate-900 text-violet-300 shadow-xs'
+                  : 'text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-100'
+              }`}
+            >
+              <Moon className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+              <span>Dark</span>
+            </button>
           </div>
         </div>
       </div>
