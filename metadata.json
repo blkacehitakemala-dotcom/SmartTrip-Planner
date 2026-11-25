@@ -1,0 +1,6 @@
+{
+  "name": "SmartTrip Planner & Budget Calculator",
+  "description": "AI-powered travel itinerary planner, real-time trip budget calculator, and departure preparation checklist with multi-language (ID/EN) and multi-currency (IDR/USD) support.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
