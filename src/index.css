@@ -1,5 +1,4 @@
 @import "tailwindcss";
-@custom-variant dark (&:where(.dark, .dark *));
 
 @theme {
   --font-display: "Plus Jakarta Sans", ui-sans-serif, system-ui, sans-serif;
@@ -11,6 +10,8 @@
   html {
     font-family: var(--font-sans);
     scroll-behavior: smooth;
+    background-color: #F8FAFC;
+    color: #0F172A;
   }
 
   h1, h2, h3, h4 {
@@ -33,11 +34,10 @@
     margin: 14mm;
   }
 
-  html,
   body {
     background: #ffffff !important;
     color: #0f172a !important;
-    font-size: 10.5pt;
+    font-size: 11pt;
   }
 
   .no-print {
@@ -48,12 +48,6 @@
     display: block !important;
   }
 
-  .print-full-width {
-    width: 100% !important;
-    max-width: 100% !important;
-    grid-column: 1 / -1 !important;
-  }
-
   .print-break-inside-avoid {
     break-inside: avoid;
   }
@@ -61,7 +55,5 @@
   .print-flat {
     box-shadow: none !important;
     border-color: #cbd5e1 !important;
-    background: #ffffff !important;
-    color: #0f172a !important;
   }
 }
